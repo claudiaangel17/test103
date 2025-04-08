@@ -1,0 +1,49 @@
+name: Step 5, Create a Pull Request
+
+on:
+  pull_request:
+    types: [opened]
+
+permissions:
+  contents: write
+
+jobs:
+  get_current_step:
+    name: Get current step number
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - id: get_step
+        run: |
+          if [ -f .github/steps/-step.txt ]; then
+            echo "current_step=$(cat .github/steps/-step.txt)" >> $GITHUB_OUTPUT
+          else
+            echo "current_step=0" >> $GITHUB_OUTPUT
+          fi
+    outputs:
+      current_step: ${{ steps.get_step.outputs.current_step }}
+
+  advance_on_pr_created:
+    name: Advance to Step 6 on PR Creation
+    needs: get_current_step
+    if: >-
+      ${{ needs.get_current_step.outputs.current_step == '5' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: main
+
+      - name: Update to Step 6
+        uses: skills/action-update-step@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          from_step: 5
+          to_step: 6
+          branch_name: update-game
+
+
